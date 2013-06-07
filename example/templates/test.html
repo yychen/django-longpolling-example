@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+    <head>
+         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    </head>
+
+    <body>
+        <h1>Long polling test</h1>
+        <h2>Result</h2>
+        <div id="result">
+            <ul>
+            </ul>
+        </div>
+        <script language="javascript">
+            $(document).ready(function() {
+                var task_id;
+                
+                var poll = function() {
+                    $.ajax({
+                        url: '/poll',
+                        dataType: 'json',
+                        type: 'GET',
+                        data: {ids: task_id.join(','), _t: new Date().getTime()},
+                        success: function(data, status) {
+                            console.log(data);
+                    
+                            if (!data.done)
+                                poll();
+                            else {
+                                var ul = $("#result ul");
+
+                                $.each(data.res, function(key, result) {
+                                    ul.append("<li>" + key + ": " + result + "</li>");
+                                });
+                            }
+                        }
+                    });
+                };
+                    
+                var trigger = function() {
+                    $.ajax({
+                        url: '/trigger',
+                        dataType: 'json',
+                        type: 'GET',
+                        success: function(data, status) {
+                            task_id = data['id']
+                            console.log(data);
+                            poll();
+                        }
+                    });
+                };
+
+                window.trigger = trigger;
+                window.poll = poll;
+            });
+        </script>
+    </body>
+</html>
